@@ -6,9 +6,11 @@ from interbotix_xs_msgs.msg import *
 from trajectory_msgs.msg import JointTrajectory
 from trajectory_msgs.msg import JointTrajectoryPoint
 import interbotix_common_modules.angle_manipulation as ang
-import interbotix_xs_modules.mr_descriptions as mrd
-from interbotix_xs_modules.core import InterbotixRobotXSCore
-from interbotix_xs_modules.gripper import InterbotixGripperXSInterface
+
+import core
+import gripper
+import mr_descriptions as mrd
+# import interbotix_xs_modules.mr_descriptions as mrd
 
 ### @brief Standalone Module to control an Interbotix Arm and Gripper
 ### @param robot_model - Interbotix Arm model (ex. 'wx200' or 'vx300s')
@@ -24,10 +26,10 @@ from interbotix_xs_modules.gripper import InterbotixGripperXSInterface
 ### @param init_node - set to True if the InterbotixRobotXSCore class should initialize the ROS node - this is the most Pythonic approach; to incorporate a robot into an existing ROS node though, set to False
 class InterbotixManipulatorXS(object):
     def __init__(self, robot_model, group_name="arm", gripper_name="gripper", robot_name=None, moving_time=2.0, accel_time=0.3, gripper_pressure=0.5, gripper_pressure_lower_limit=150, gripper_pressure_upper_limit=350, init_node=True):
-        self.dxl = InterbotixRobotXSCore(robot_model, robot_name, init_node)
+        self.dxl = core.InterbotixRobotXSCore(robot_model, robot_name, init_node)
         self.arm = InterbotixArmXSInterface(self.dxl, robot_model, group_name, moving_time, accel_time)
         if gripper_name is not None:
-            self.gripper = InterbotixGripperXSInterface(self.dxl, gripper_name, gripper_pressure, gripper_pressure_lower_limit, gripper_pressure_upper_limit)
+            self.gripper = gripper.InterbotixGripperXSInterface(self.dxl, gripper_name, gripper_pressure, gripper_pressure_lower_limit, gripper_pressure_upper_limit)
 
 ### @brief Definition of the Interbotix Arm Module
 ### @param core - reference to the InterbotixRobotXSCore class containing the internal ROS plumbing that drives the Python API
@@ -70,7 +72,8 @@ class InterbotixArmXSInterface(object):
         self.set_trajectory_time(moving_time, accel_time)
         self.joint_commands = list(positions)
         joint_commands = JointGroupCommand(self.group_name, self.joint_commands)
-        self.core.pub_group.publish(joint_commands)
+        # self.core.pub_group.publish(joint_commands)
+        self.core.robot_write_commands(self.group_name, self.joint_commands)
         if blocking:
             rospy.sleep(self.moving_time)
         self.T_sb = mr.FKinSpace(self.robot_des.M, self.robot_des.Slist, self.joint_commands)
@@ -171,7 +174,8 @@ class InterbotixArmXSInterface(object):
         self.set_trajectory_time(moving_time, accel_time)
         self.joint_commands[self.core.js_index_map[joint_name]] = position
         single_command = JointSingleCommand(joint_name, position)
-        self.core.pub_single.publish(single_command)
+        # self.core.pub_single.publish(single_command)
+        self.core.robot_write_joint_command(joint_name, position)
         if blocking:
             rospy.sleep(self.moving_time)
         self.T_sb = mr.FKinSpace(self.robot_des.M, self.robot_des.Slist, self.joint_commands)
@@ -299,13 +303,15 @@ class InterbotixArmXSInterface(object):
         if success:
             self.set_trajectory_time(wp_moving_time, wp_accel_time)
             joint_traj.joint_names = self.group_info.joint_names
-            current_positions = []
-            with self.core.js_mutex:
-                for name in joint_traj.joint_names:
-                    current_positions.append(self.core.joint_states.position[self.core.js_index_map[name]])
+            # current_positions = []
+            # with self.core.js_mutex:
+            #     for name in joint_traj.joint_names:
+            #         current_positions.append(self.core.joint_states.position[self.core.js_index_map[name]])
+            current_positions = self.core.robot_get_current_positions(joint_traj.joint_names)
             joint_traj.points[0].positions = current_positions
             joint_traj.header.stamp = rospy.Time.now()
-            self.core.pub_traj.publish(JointTrajectoryCommand("group", self.group_name, joint_traj))
+            self.core.robot_write_position_trajectory("group", self.group_name, joint_traj)
+            # self.core.pub_traj.publish(JointTrajectoryCommand("group", self.group_name, joint_traj))
             rospy.sleep(moving_time + wp_moving_time)
             self.T_sb = T_sd
             self.joint_commands = joint_positions
@@ -359,6 +365,23 @@ class InterbotixArmXSInterface(object):
         joint_states = [self.core.joint_states.position[self.core.js_index_map[name]] for name in self.group_info.joint_names]
         T_sb = mr.FKinSpace(self.robot_des.M, self.robot_des.Slist, joint_states)
         return T_sb
+    
+    
+
+    def get_cartesian_pose(self):
+        joint_states = [self.core.joint_states.position[self.core.js_index_map[name]] for name in self.group_info.joint_names]
+        T_sb = mr.FKinSpace(self.robot_des.M, self.robot_des.Slist, joint_states)
+        cartesian =  np.array([T_sb[0, 3], T_sb[1, 3], T_sb[2, 3]])
+        return cartesian
+    
+    def convert_joint_positions_to_cartesian(self, joint_states):
+        print(joint_states)
+        T_sb = mr.FKinSpace(self.robot_des.M, self.robot_des.Slist, joint_states)
+        #print(T_sb)
+        cartesian =  np.array([T_sb[0, 3], T_sb[1, 3], T_sb[2, 3]])
+        return cartesian
+        
+
 
     ### @brief Resets self.joint_commands to be the actual positions seen by the encoders
     ### @details - should be used whenever joints are torqued off, right after torquing them on again

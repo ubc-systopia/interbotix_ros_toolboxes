@@ -20,8 +20,8 @@ class InterbotixRobotXSCore(object):
         if (self.robot_name is None):
             self.robot_name = robot_model
         if (init_node):
-            rospy.init_node(self.robot_name + "_robot_manipulation")
-
+            rospy.init_node(self.robot_name + "_robot_manipulation", disable_signals=True, anonymous=True)
+            
         # Try to find the xs_sdk services under the 'robot_name' namespace
         # If the services can't be found after 5 seconds, we catch the exception
         #   and gracefully exit the program with a hint
@@ -135,7 +135,7 @@ class InterbotixRobotXSCore(object):
     ### @param joint_name - the name of the motor to command
     ### @param command - desired command
     def robot_write_joint_command(self, joint_name, command):
-        msg = JointSingleCommand(joint_name, command);
+        msg = JointSingleCommand(joint_name, command)
         self.pub_single.publish(msg)
 
     ### @brief Command a trajectory of positions or velocities to a single motor or a group of motors
@@ -165,6 +165,7 @@ class InterbotixRobotXSCore(object):
 
     ### @brief Get the current joint states (position, velocity, effort) of all Dynamixel motors
     ### @return joint_states - JointState ROS message. Refer to online documentation to see its structure
+    @property
     def robot_get_joint_states(self):
         joint_states = None
         with self.js_mutex:
@@ -175,6 +176,7 @@ class InterbotixRobotXSCore(object):
     ### @param name - desired motor name for which to get the joint state
     ### @return joint_info - dictionary with 3 keys: "position", "velocity", and "effort".
     ###                      Units are rad, rad/s, and mA
+ 
     def robot_get_single_joint_state(self, name):
         joint_states = None
         with self.js_mutex:
@@ -190,3 +192,23 @@ class InterbotixRobotXSCore(object):
     def joint_state_cb(self, msg):
         with self.js_mutex:
             self.joint_states = msg
+
+  
+    def robot_get_joint_position(self, joint):
+        joint_states = None
+        with self.js_mutex:
+            joint_states = copy.deepcopy(self.joint_states)
+            joint_position = joint_states.position[joint]
+        return joint_position
+
+    @property
+    def robot_get_current_positions(self, joint_names = ['waist', 'shoulder', 'elbow', 'wrist_angle', 'wrist_rotate', 'gripper']):
+        current_positions = []
+        with self.js_mutex:
+            for name in joint_names:
+                current_positions.append(self.joint_states.position[self.js_index_map[name]])
+        return current_positions
+
+    def robot_write_position_trajectory(self, cmd_type, name, traj):
+        msg = JointTrajectoryCommand(cmd_type, name, traj)
+        self.pub_traj.publish(msg)

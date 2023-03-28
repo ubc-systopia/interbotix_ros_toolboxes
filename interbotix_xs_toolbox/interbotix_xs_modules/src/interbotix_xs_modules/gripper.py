@@ -45,12 +45,14 @@ class InterbotixGripperXSInterface(object):
     ### @param event [unused] - Timer event message
     def gripper_state(self, event):
         if (self.gripper_moving):
-            with self.core.js_mutex:
-                gripper_pos = self.core.joint_states.position[self.left_finger_index]
+            gripper_pos = self.core.robot_get_joint_position(self.left_finger_index)
+            # with self.core.js_mutex:
+            #     gripper_pos = self.core.joint_states.position[self.left_finger_index]
             if ((self.gripper_command.cmd > 0 and gripper_pos >= self.left_finger_upper_limit) or
                 (self.gripper_command.cmd < 0 and gripper_pos <= self.left_finger_lower_limit)):
                 self.gripper_command.cmd = 0
-                self.core.pub_single.publish(self.gripper_command)
+                self.core.robot_write_joint_command("gripper", self.gripper_command.cmd)
+                # self.core.pub_single.publish(self.gripper_command)
                 self.gripper_moving = False
 
     ### @brief Helper function used to publish effort commands to the gripper (when in 'pwm' or 'current' mode)
@@ -58,11 +60,13 @@ class InterbotixGripperXSInterface(object):
     ### @param delay - number of seconds to wait before returning control to the user
     def gripper_controller(self, effort, delay):
         self.gripper_command.cmd = effort
-        with self.core.js_mutex:
-            gripper_pos = self.core.joint_states.position[self.left_finger_index]
+        gripper_pos = self.core.robot_get_joint_position(self.left_finger_index)
+        # with self.core.get_js_mutex():
+        #     gripper_pos = self.core.joint_states.position[self.left_finger_index]
         if ((self.gripper_command.cmd > 0 and gripper_pos < self.left_finger_upper_limit) or
             (self.gripper_command.cmd < 0 and gripper_pos > self.left_finger_lower_limit)):
-            self.core.pub_single.publish(self.gripper_command)
+            self.core.robot_write_joint_command("gripper", self.gripper_command.cmd)
+            # self.core.pub_single.publish(self.gripper_command)
             self.gripper_moving = True
             rospy.sleep(delay)
 
