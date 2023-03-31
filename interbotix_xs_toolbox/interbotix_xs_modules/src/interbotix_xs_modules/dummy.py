@@ -5,24 +5,35 @@ class DummyDevice:
     ### @param door - False|dict with keys 'plane' (one of ['North', 'South', 'East', 'West', 'Top', 'Bottom']), 'state' ('open'|'closed') and 'move_time' (number)
     ### @param coords - None|dict with keys 'x', 'y', 'z' of closest corner w.r.t. robot
     ### @param dims - None|dict with keys 'height', 'width', 'length'
+   
+#    TODO: remove coords and dims
     def __init__(self, name, door, coords, dims):
-        self.name = name
-        self.door = door
+        self._name = name
+        self._door = door
         self.coords = coords
         self.dims = dims
         print(f"Initialized {name}.")
 
-    ### @brief returns the invalid space coordinates in which there would be a collision
-    def calculate_3d_space(self):
-        pass
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def door(self):
+        return self._door
+    
+    @property
+    def door_state(self):
+        return self._door['state']
 
     ### Setters
+    @name.setter
+    def name(self, new_name):
+        self._name = new_name
 
-    def set_name(self, name):
-        self.name = name
-
-    def create_door(self, plane, state, delay):
-        self.door = {
+    @door.setter
+    def door(self, plane, state, delay):
+        self._door = {
             'plane': plane, 
             'state': state,
             'move_time': delay,
@@ -31,55 +42,18 @@ class DummyDevice:
     ### @brief if door exists, set its state
     def set_door(self, attr, val):
         if type(self.door) is dict:
-            self.door[attr] = val
+            self._door[attr] = val
             # if attr == "state":
             #     time.sleep(self.get_door()['delay'])
         else:
             print("Cannot change attribute: create a door first.")
 
-    def set_coords(self, x, y, z):
-        self.coords = {
-            'x': x,
-            'y': y,
-            'z': z
-        }
-
-    def set_dims(self, height, width, length):
-        self.dims = {
-            'height': height,
-            'width': width,
-            'length': length
-        } 
-
-    ### Getters
-    @property
-    def get_name(self):
-        return self.name
-
-    @property
-    def get_door(self):
-        return self.door
-    
-    # Changes made by Zainab #
-    @property
-    def get_door_state(self):
-        return self.door['state']
-    ##########################
-
-    @property
-    def get_coords(self):
-        return self.coords
-
-    @property
-    def get_dims(self):
-        return self.dims
 
 class SimulatedSmartDevice(DummyDevice):
     ### @param action - str
     def __init__(self, name, door, coords, dims, action):
-        # super(SimulatedSmartDevice, self).__init__(name, door, coords, dims)
         super().__init__(name, door, coords, dims)
-        self.action = action
+        self._action = action
         self.active = False
 
     ### @brief returns whether action ran successfully after opening the door
@@ -87,33 +61,33 @@ class SimulatedSmartDevice(DummyDevice):
         self.set_door('state', 'open')   
             
         if self.active is False:
-            print(f"Running action {self.get_action}...")
+            print(f"Running action {self._action}...")
             self.active = True
             time.sleep(delay)
         else:
-            print(f"Error: cannot run action {self.get_action}, action already running.")
+            print(f"Error: cannot run action {self._action}, action already running.")
             return False
 
     ### @brief returns whether action stopped successfully after closing the door
     def stop_action(self, delay):
         if self.active is True:
-            print(f"Stopping action {self.get_action}.")
+            print(f"Stopping action {self._action}.")
             self.active = False
             self.set_door('state','closed')
             return True
         else:
-            print(f"Error: cannot stop action {self.get_action}, action is not running.")
+            print(f"Error: cannot stop action {self._action}, action is not running.")
             return False
 
-    ### Setters
-
-    def set_action(self, new_action):
-        self.action = new_action
-
-    ### Getters
     @property
-    def get_action(self):
-        return self.action
+    def action(self):
+        return self._action
+    
+    ### Setters
+    @action.setter
+    def action(self, new_action):
+        self._action = new_action
+
 
 
 class SimulatedTowerOfHanoi(DummyDevice):
@@ -209,37 +183,47 @@ class SimulatedTowerOfHanoi(DummyDevice):
 ### @param temp - number (Celsius)
 ### @attr cap - bool
 class Vial():
-    def __init__(self, volume, location, temp):
-        self.max_vol = volume
-        self.location = location
-        self.temp = temp
-        self.cap = False
+    def __init__(self, max_vol, location, temp):
+        self._max_vol = max_vol
+        self._location = location
+        self._temp = temp
+        self._cap = False
 
     def cap_vial(self):
-        self.cap = True
+        self._cap = True
 
     def decap_vial(self):
-        self.cap = False
+        self._cap = False
+
+    # TODO: should max_vol have a setter?
+    @property
+    def max_vol(self):
+        return self._max_vol
+
+    @property
+    def location(self):
+        return self._location['drop_off']
+
+    @property
+    def temp(self):
+        return self._temp
+    
+    @property
+    def cap(self):
+        return self._cap
 
     ### Setters
-    def set_location(self, loc):
-        self.location = loc
+    @location.setter
+    def location(self, loc):
+        self._location = loc
 
-    def set_temp(self, temp):
-        self.temp = temp
+    @temp.setter
+    def temp(self, temp):
+        self._temp = temp
 
-    ### Getters
-    @property
-    def get_volume(self):
-        return self.max_vol
-
-    @property
-    def get_location(self):
-        return self.location['drop_off']
-
-    @property
-    def get_temp(self):
-        return self.temp
+    @cap.setter
+    def cap(self, cap):
+        self._cap = cap
 
 # class SimulatedRings():
     # def __init__(self):
