@@ -6,6 +6,9 @@ from interbotix_xs_msgs.srv import *
 from sensor_msgs.msg import JointState
 from trajectory_msgs.msg import JointTrajectory
 from trajectory_msgs.msg import JointTrajectoryPoint
+import numpy as np
+import modern_robotics as mr
+import mr_descriptions as mrd
 
 ### @brief Class that interfaces with the xs_sdk node ROS interfaces
 ### @param robot_model - Interbotix Arm model (ex. 'wx200' or 'vx300s')
@@ -17,6 +20,7 @@ class InterbotixRobotXSCore(object):
         self.joint_states = None
         self.js_mutex = threading.Lock()
         self.robot_name = robot_name
+        self.robot_model = robot_model
         if (self.robot_name is None):
             self.robot_name = robot_model
         if (init_node):
@@ -208,6 +212,17 @@ class InterbotixRobotXSCore(object):
             for name in joint_names:
                 current_positions.append(self.joint_states.position[self.js_index_map[name]])
         return current_positions
+    
+    @property
+    def robot_get_cartesian_position(self, joint_names = ['waist', 'shoulder', 'elbow', 'wrist_angle', 'wrist_rotate', 'gripper']):
+        current_positions = []
+        self.robot_des = getattr(mrd, self.robot_model)
+        with self.js_mutex:
+            for name in joint_names:
+                current_positions.append(self.joint_states.position[self.js_index_map[name]])
+        T_sb = mr.FKinSpace(self.robot_des.M, self.robot_des.Slist, current_positions)
+        #cartesian =  np.array([T_sb[0, 3], T_sb[1, 3], T_sb[2, 3]])
+        return {'x': T_sb[0, 3], 'y': T_sb[1, 3], 'z': T_sb[2,3]}
 
     def robot_write_position_trajectory(self, cmd_type, name, traj):
         msg = JointTrajectoryCommand(cmd_type, name, traj)
