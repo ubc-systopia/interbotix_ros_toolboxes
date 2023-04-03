@@ -2,16 +2,10 @@ import time
 
 class DummyDevice:
     ### @param name - str
-    ### @param door - False|dict with keys 'plane' (one of ['North', 'South', 'East', 'West', 'Top', 'Bottom']), 'state' ('open'|'closed') and 'move_time' (number)
-    ### @param coords - None|dict with keys 'x', 'y', 'z' of closest corner w.r.t. robot
-    ### @param dims - None|dict with keys 'height', 'width', 'length'
-   
-#    TODO: remove coords and dims
-    def __init__(self, name, door, coords, dims):
+    ### @param door - dict with keys 'plane' (one of ['North', 'South', 'East', 'West', 'Top', 'Bottom']), 'state' ('open'|'closed') and 'move_time' (number)
+    def __init__(self, name, door):
         self._name = name
         self._door = door
-        self.coords = coords
-        self.dims = dims
         print(f"Initialized {name}.")
 
     @property
@@ -41,7 +35,7 @@ class DummyDevice:
     
     ### @brief if door exists, set its state
     def set_door(self, attr, val):
-        if type(self.door) is dict:
+        if type(self._door) is dict:
             self._door[attr] = val
             # if attr == "state":
             #     time.sleep(self.get_door()['delay'])
@@ -51,48 +45,85 @@ class DummyDevice:
 
 class SimulatedSmartDevice(DummyDevice):
     ### @param action - str
-    def __init__(self, name, door, coords, dims, action):
-        super().__init__(name, door, coords, dims)
-        self._action = action
+    # TODO: reverted changing attr names to _action and _active and remove property decorator
+    def __init__(self, name, door, action):
+        super().__init__(name, door)
+        self.action = action
         self.active = False
 
     ### @brief returns whether action ran successfully after opening the door
-    def run_action(self, delay, **kwargs) -> bool:
-        self.set_door('state', 'open')   
-            
+    def run_action(self, delay, **kwargs) -> bool: 
         if self.active is False:
-            print(f"Running action {self._action}...")
+            print(f"Running action {self.action}...")
             self.active = True
             time.sleep(delay)
         else:
-            print(f"Error: cannot run action {self._action}, action already running.")
+            print(f"Error: cannot run action {self.action}, action already running.")
             return False
 
     ### @brief returns whether action stopped successfully after closing the door
     def stop_action(self, delay):
         if self.active is True:
-            print(f"Stopping action {self._action}.")
+            print(f"Stopping action {self.action}.")
             self.active = False
-            self.set_door('state','closed')
+            time.sleep(delay)
             return True
         else:
-            print(f"Error: cannot stop action {self._action}, action is not running.")
+            print(f"Error: cannot stop action {self.action}, action is not running.")
             return False
 
-    @property
     def action(self):
-        return self._action
+        return self.action
     
-    ### Setters
-    @action.setter
-    def action(self, new_action):
-        self._action = new_action
+    def active(self):
+        return self.active
 
+    ### Setters
+    def set_action(self, new_action):
+        self.action = new_action
+
+
+### @param volume - number (mL)
+### @param temp - number (Celsius)
+### @attr cap - bool
+class Vial():
+    def __init__(self, max_vol, temp):
+        self._max_vol = max_vol
+        self._temp = temp
+        self._cap = False
+
+    def cap_vial(self):
+        self._cap = True
+
+    def decap_vial(self):
+        self._cap = False
+
+    # TODO: should max_vol have a setter?
+    @property
+    def max_vol(self):
+        return self._max_vol
+
+    @property
+    def temp(self):
+        return self._temp
+    
+    @property
+    def cap(self):
+        return self._cap
+
+    ### Setters
+    @temp.setter
+    def temp(self, temp):
+        self._temp = temp
+
+    @cap.setter
+    def cap(self, cap):
+        self._cap = cap
 
 
 class SimulatedTowerOfHanoi(DummyDevice):
-    def __init__(self, name, door, coords, dims, max_rings):
-        super(SimulatedTowerOfHanoi, self).__init__(name, door, coords, dims)
+    def __init__(self, name, door, max_rings):
+        super(SimulatedTowerOfHanoi, self).__init__(name, door)
         self.max_rings = max_rings
         self.num_rings = 0
         self.rings = None
@@ -176,76 +207,3 @@ class SimulatedTowerOfHanoi(DummyDevice):
     
     def get_rings(self):
         return self.rings
-
-
-### @param volume - number (mL)
-### @param location - str
-### @param temp - number (Celsius)
-### @attr cap - bool
-class Vial():
-    def __init__(self, max_vol, location, temp):
-        self._max_vol = max_vol
-        self._location = location
-        self._temp = temp
-        self._cap = False
-
-    def cap_vial(self):
-        self._cap = True
-
-    def decap_vial(self):
-        self._cap = False
-
-    # TODO: should max_vol have a setter?
-    @property
-    def max_vol(self):
-        return self._max_vol
-
-    @property
-    def location(self):
-        return self._location['drop_off']
-
-    @property
-    def temp(self):
-        return self._temp
-    
-    @property
-    def cap(self):
-        return self._cap
-
-    ### Setters
-    @location.setter
-    def location(self, loc):
-        self._location = loc
-
-    @temp.setter
-    def temp(self, temp):
-        self._temp = temp
-
-    @cap.setter
-    def cap(self, cap):
-        self._cap = cap
-
-# class SimulatedRings():
-    # def __init__(self):
-    #     pass
-
-
-    # class Ring():
-    #     def __init__(self, position, color):
-    #         self.position = position
-    #         self.color = color
-    #         print("Initialized %s Ring!" % color)
-
-    #     ### Setters
-    #     def set_position(self, position):
-    #         self.position = position
-
-    #     def set_color(self, color):
-    #         self.color = color
-
-    #     ### Getters
-    #     def get_position(self):
-    #         return self.position
-
-    #     def get_color(self):
-    #         return self.color
