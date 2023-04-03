@@ -41,7 +41,7 @@ class DummyDevice:
     
     ### @brief if door exists, set its state
     def set_door(self, attr, val):
-        if type(self.door) is dict:
+        if type(self._door) is dict:
             self._door[attr] = val
             # if attr == "state":
             #     time.sleep(self.get_door()['delay'])
@@ -57,8 +57,7 @@ class SimulatedSmartDevice(DummyDevice):
         self.active = False
 
     ### @brief returns whether action ran successfully after opening the door
-    def run_action(self, delay, **kwargs) -> bool:
-        self.set_door('state', 'open')   
+    def run_action(self, delay, **kwargs) -> bool: 
             
         if self.active is False:
             print(f"Running action {self._action}...")
@@ -73,7 +72,6 @@ class SimulatedSmartDevice(DummyDevice):
         if self.active is True:
             print(f"Stopping action {self._action}.")
             self.active = False
-            self.set_door('state','closed')
             return True
         else:
             print(f"Error: cannot stop action {self._action}, action is not running.")

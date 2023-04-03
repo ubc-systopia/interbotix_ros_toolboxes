@@ -206,7 +206,7 @@ class InterbotixRobotXSCore(object):
         return joint_position
 
     @property
-    def robot_get_current_positions(self, joint_names = ['waist', 'shoulder', 'elbow', 'wrist_angle', 'wrist_rotate', 'gripper']):
+    def robot_get_current_positions(self, joint_names = ['waist', 'shoulder', 'elbow', 'forearm_roll', 'wrist_angle', 'wrist_rotate']):
         current_positions = []
         with self.js_mutex:
             for name in joint_names:
@@ -214,7 +214,7 @@ class InterbotixRobotXSCore(object):
         return current_positions
     
     @property
-    def robot_get_cartesian_position(self, joint_names = ['waist', 'shoulder', 'elbow', 'wrist_angle', 'wrist_rotate', 'gripper']):
+    def robot_get_cartesian_position(self, joint_names = ['waist', 'shoulder', 'elbow', 'forearm_roll', 'wrist_angle', 'wrist_rotate']):
         current_positions = []
         self.robot_des = getattr(mrd, self.robot_model)
         with self.js_mutex:
