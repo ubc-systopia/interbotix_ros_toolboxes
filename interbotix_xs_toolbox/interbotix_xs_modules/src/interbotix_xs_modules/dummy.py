@@ -22,7 +22,7 @@ class DummyDevice:
 
     ### Setters
     @name.setter
-    def name(self, new_name):
+    def set_name(self, new_name):
         self._name = new_name
 
     @door.setter
@@ -45,48 +45,51 @@ class DummyDevice:
 
 class SimulatedSmartDevice(DummyDevice):
     ### @param action - str
-    # TODO: reverted changing attr names to _action and _active and remove property decorator
     def __init__(self, name, door, action):
         super().__init__(name, door)
-        self.action = action
-        self.active = False
+        self._action = action
+        self._active = False
 
     ### @brief returns whether action ran successfully after opening the door
     def run_action(self, delay, **kwargs) -> bool: 
-        if self.active is False:
-            print(f"Running action {self.action}...")
-            self.active = True
+        if self._active is False:
+            print(f"Running action {self._action}...")
+            self._active = True
             time.sleep(delay)
         else:
-            print(f"Error: cannot run action {self.action}, action already running.")
+            print(f"Error: cannot run action {self._action}, action already running.")
             return False
 
     ### @brief returns whether action stopped successfully after closing the door
     def stop_action(self, delay):
-        if self.active is True:
-            print(f"Stopping action {self.action}.")
-            self.active = False
+        if self._active is True:
+            print(f"Stopping action {self._action}.")
+            self._active = False
             time.sleep(delay)
             return True
         else:
-            print(f"Error: cannot stop action {self.action}, action is not running.")
+            print(f"Error: cannot stop action {self._action}, action is not running.")
             return False
 
+    @property
     def action(self):
-        return self.action
+        return self._action
     
+    @property
     def active(self):
-        return self.active
+        return self._active
 
     ### Setters
+    @action.setter
     def set_action(self, new_action):
-        self.action = new_action
+        self._action = new_action
 
 
-### @param volume - number (mL)
-### @param temp - number (Celsius)
-### @attr cap - bool
 class Vial():
+    ### @param volume - number (mL)
+    ### @param temp - number (Celsius)
+    ### @attr cap - bool
+    # TODO: should we add attributes safe_vol, curr_vol, curr_substance, clean, etc.?
     def __init__(self, max_vol, temp):
         self._max_vol = max_vol
         self._temp = temp
@@ -113,7 +116,7 @@ class Vial():
 
     ### Setters
     @temp.setter
-    def temp(self, temp):
+    def change_temp(self, temp):
         self._temp = temp
 
     @cap.setter

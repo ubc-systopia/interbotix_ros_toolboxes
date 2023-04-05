@@ -205,7 +205,7 @@ class InterbotixRobotXSCore(object):
             joint_position = joint_states.position[joint]
         return joint_position
 
-# TODO: is property decorator necessary?
+    @property
     def robot_get_current_positions(self, joint_names = ['waist', 'shoulder', 'elbow', 'forearm_roll', 'wrist_angle', 'wrist_rotate']):
         current_positions = []
         with self.js_mutex:
@@ -213,6 +213,7 @@ class InterbotixRobotXSCore(object):
                 current_positions.append(self.joint_states.position[self.js_index_map[name]])
         return current_positions
     
+    @property
     def robot_get_cartesian_position(self, joint_names = ['waist', 'shoulder', 'elbow', 'forearm_roll', 'wrist_angle', 'wrist_rotate']):
         current_positions = []
         self.robot_des = getattr(mrd, self.robot_model)
