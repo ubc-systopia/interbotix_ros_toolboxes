@@ -366,8 +366,16 @@ class InterbotixArmXSInterface(object):
         T_sb = mr.FKinSpace(self.robot_des.M, self.robot_des.Slist, joint_states)
         return T_sb
     
-    
+    ### @brief Resets self.joint_commands to be the actual positions seen by the encoders
+    ### @details - should be used whenever joints are torqued off, right after torquing them on again
+    def capture_joint_positions(self):
+        self.joint_commands = []
+        for name in self.group_info.joint_names:
+            self.joint_commands.append(self.core.joint_states.position[self.core.js_index_map[name]])
+        self.T_sb = mr.FKinSpace(self.robot_des.M, self.robot_des.Slist, self.joint_commands)
 
+
+    # CPS Additions
     def get_cartesian_pose(self):
         joint_states = [self.core.joint_states.position[self.core.js_index_map[name]] for name in self.group_info.joint_names]
         T_sb = mr.FKinSpace(self.robot_des.M, self.robot_des.Slist, joint_states)
@@ -380,13 +388,3 @@ class InterbotixArmXSInterface(object):
         #print(T_sb)
         cartesian =  np.array([T_sb[0, 3], T_sb[1, 3], T_sb[2, 3]])
         return cartesian
-        
-
-
-    ### @brief Resets self.joint_commands to be the actual positions seen by the encoders
-    ### @details - should be used whenever joints are torqued off, right after torquing them on again
-    def capture_joint_positions(self):
-        self.joint_commands = []
-        for name in self.group_info.joint_names:
-            self.joint_commands.append(self.core.joint_states.position[self.core.js_index_map[name]])
-        self.T_sb = mr.FKinSpace(self.robot_des.M, self.robot_des.Slist, self.joint_commands)

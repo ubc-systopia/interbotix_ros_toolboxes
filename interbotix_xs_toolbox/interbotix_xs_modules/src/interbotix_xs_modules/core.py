@@ -63,6 +63,8 @@ class InterbotixRobotXSCore(object):
         print("Robot Name: %s\nRobot Model: %s" % (self.robot_name, robot_model))
         print("Initialized InterbotixRobotXSCore!\n")
 
+        # joint map:  {'waist': 0, 'shoulder': 1, 'elbow': 2, 'forearm_roll': 3, 'wrist_angle': 4, 'wrist_rotate': 5, 'gripper': 6, 'left_finger': 7, 'right_finger': 8}
+
     ### @brief Set the operating mode for either a single motor or a group of motors
     ### @param cmd_type - can be "group" for a group of motors or "single" for a single motor
     ### @param name - group name if cmd_type is 'group' or the motor name if cmd_type is 'single'
@@ -139,6 +141,7 @@ class InterbotixRobotXSCore(object):
     ### @param joint_name - the name of the motor to command
     ### @param command - desired command
     def robot_write_joint_command(self, joint_name, command):
+        print("***CMD: ", command)
         msg = JointSingleCommand(joint_name, command)
         self.pub_single.publish(msg)
 
@@ -188,8 +191,9 @@ class InterbotixRobotXSCore(object):
         joint_index = joint_states.name.index(name)
         joint_info = {}
         joint_info["position"] = joint_states.position[joint_index]
-        joint_info["velocity"] = joint_states.velocity[joint_index]
-        joint_info["effort"] = joint_states.effort[joint_index]
+        if joint_index < 7:
+            joint_info["velocity"] = joint_states.velocity[joint_index]
+            joint_info["effort"] = joint_states.effort[joint_index]
         return joint_info
 
     ### @brief ROS Subscriber Callback function to get the latest JointState message

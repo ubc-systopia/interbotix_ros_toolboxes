@@ -49,6 +49,7 @@ class SimulatedSmartDevice(DummyDevice):
         super().__init__(name, door)
         self._action = action
         self._active = False
+        print("Initialized SimulatedSmartDevice.")
 
     ### @brief returns whether action ran successfully after opening the door
     def run_action(self, delay, **kwargs) -> bool: 
@@ -94,6 +95,7 @@ class Vial():
         self._max_vol = max_vol
         self._temp = temp
         self._cap = False
+        print("Initialized Vial.")
 
     def cap_vial(self):
         self._cap = True
