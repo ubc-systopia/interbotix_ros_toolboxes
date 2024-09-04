@@ -1,6 +1,7 @@
 import rospy
-from interbotix_xs_msgs.msg import JointSingleCommand
-from interbotix_xs_modules.core import InterbotixRobotXSCore
+from interbotix_xs_msgs.msg import *
+# from interbotix_xs_modules.core import InterbotixRobotXSCore
+from core import InterbotixRobotXSCore
 
 ### @brief Standalone Module to control an Interbotix Gripper using PWM or Current control
 ### @param robot_model - Interbotix Arm model (ex. 'wx200' or 'vx300s')

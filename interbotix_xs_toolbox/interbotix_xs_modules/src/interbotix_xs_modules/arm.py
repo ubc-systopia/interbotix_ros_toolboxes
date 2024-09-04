@@ -380,7 +380,8 @@ class InterbotixArmXSInterface(object):
         joint_states = [self.core.joint_states.position[self.core.js_index_map[name]] for name in self.group_info.joint_names]
         T_sb = mr.FKinSpace(self.robot_des.M, self.robot_des.Slist, joint_states)
         cartesian =  np.array([T_sb[0, 3], T_sb[1, 3], T_sb[2, 3]])
-        return cartesian
+        rotations = np.array(ang.rotationMatrixToEulerAngles(T_sb[:3,:3]))
+        return  [round(x, 4) for x in np.concatenate((cartesian, rotations)).tolist()]
     
     def convert_joint_positions_to_cartesian(self, joint_states):
         print(joint_states)
@@ -388,3 +389,28 @@ class InterbotixArmXSInterface(object):
         #print(T_sb)
         cartesian =  np.array([T_sb[0, 3], T_sb[1, 3], T_sb[2, 3]])
         return cartesian
+
+    def get_cartesian_pose_gripper_tip(self):
+        ee_gripper_link_to_fingertip_x = 0.0295
+        transform = np.array([
+            [1.0, 0.0, 0.0, ee_gripper_link_to_fingertip_x],
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [0.0,0.0, 0.0, 1.0]
+
+        ])
+        joint_states = [self.core.joint_states.position[self.core.js_index_map[name]] for name in self.group_info.joint_names]
+        T_sb = mr.FKinSpace(self.robot_des.M, self.robot_des.Slist, joint_states)
+        new_transform = np.dot(np.array(T_sb), transform)
+        cartesian =  np.array([new_transform[0, 3], new_transform[1, 3], new_transform[2, 3]])
+        rotations = np.array(ang.rotationMatrixToEulerAngles(new_transform[:3,:3]))
+        return  [round(x, 4) for x in np.concatenate((cartesian, rotations)).tolist()]
+
+    
+    def set_ee_pose_components(self, x=0, y=0, z=0, roll=0, pitch=0, yaw=None, custom_guess=None, execute=True, moving_time=None, accel_time=None, blocking=True):
+        if (self.group_info.num_joints < 6 or (self.group_info.num_joints >= 6 and yaw is None)):
+            yaw = math.atan2(y,x)
+        T_sd = np.identity(4)
+        T_sd[:3,:3] = ang.eulerAnglesToRotationMatrix([roll, pitch, yaw])
+        T_sd[:3, 3] = [x, y, z]
+        return self.set_ee_pose_matrix(T_sd, custom_guess, execute, moving_time, accel_time, blocking)
