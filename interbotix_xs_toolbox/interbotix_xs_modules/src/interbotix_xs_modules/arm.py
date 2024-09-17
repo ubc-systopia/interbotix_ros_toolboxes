@@ -31,6 +31,86 @@ class InterbotixManipulatorXS(object):
         if gripper_name is not None:
             self.gripper = gripper.InterbotixGripperXSInterface(self.dxl, gripper_name, gripper_pressure, gripper_pressure_lower_limit, gripper_pressure_upper_limit)
 
+
+    def publish_positions(self, positions, moving_time=None, accel_time=None, blocking=True):
+        self.arm.publish_positions(positions, moving_time=None, accel_time=None, blocking=True)
+
+    def set_trajectory_time(self, moving_time=None, accel_time=None):
+        self.arm.set_trajectory_time(moving_time=None, accel_time=None)
+
+    def check_joint_limits(self, positions):
+        return self.arm.check_joint_limits(positions)
+    
+    def check_single_joint_limit(self, joint_name, position):
+        return self.arm.check_single_joint_limit( joint_name, position)
+    
+    def set_joint_positions(self, joint_positions, moving_time=None, accel_time=None, blocking=True):
+        return self.arm.set_joint_positions(joint_positions, moving_time=None, accel_time=None, blocking=True)
+    
+    def go_to_home_pose(self, moving_time=None, accel_time=None, blocking=True):
+        self.arm.go_to_home_pose( moving_time=None, accel_time=None, blocking=True)
+
+    def go_to_sleep_pose(self, moving_time=None, accel_time=None, blocking=True):
+        self.arm.go_to_sleep_pose( moving_time=None, accel_time=None, blocking=True)
+
+    def set_single_joint_position(self, joint_name, position, moving_time=None, accel_time=None, blocking=True):
+        return self.arm.set_single_joint_position(joint_name, position, moving_time=None, accel_time=None, blocking=True)
+
+    def set_ee_pose_matrix(self, T_sd, custom_guess=None, execute=True, moving_time=None, accel_time=None, blocking=True):
+        return self.arm.set_ee_pose_matrix( T_sd, custom_guess=None, execute=True, moving_time=None, accel_time=None, blocking=True)
+    
+    def set_ee_pose_components(self, x=0, y=0, z=0, roll=0, pitch=0, yaw=None, custom_guess=None, execute=True, moving_time=None, accel_time=None, blocking=True):
+        return self.arm.set_ee_pose_components( x=0, y=0, z=0, roll=0, pitch=0, yaw=None, custom_guess=None, execute=True, moving_time=None, accel_time=None, blocking=True)
+    
+    def set_ee_cartesian_trajectory(self, x=0, y=0, z=0, roll=0, pitch=0, yaw=0, moving_time=None, wp_moving_time=0.2, wp_accel_time=0.1, wp_period=0.05):
+        return self.arm.set_ee_cartesian_trajectory(x=0, y=0, z=0, roll=0, pitch=0, yaw=0, moving_time=None, wp_moving_time=0.2, wp_accel_time=0.1, wp_period=0.05)
+    
+    def set_relative_ee_position_wrt_to_base_frame(self, *, dx=0, dy=0, dz=0, custom_guess=None, execute=True, moving_time=None, accel_time=None, blocking=True):
+        return self.arm.set_relative_ee_position_wrt_to_base_frame(dx=0, dy=0, dz=0, custom_guess=None, execute=True, moving_time=None, accel_time=None, blocking=True)
+    
+    def get_joint_commands(self):
+        return self.arm.get_joint_commands()
+    
+    def get_single_joint_command(self, joint_name):
+        return self.arm.get_single_joint_command(joint_name)
+    
+    def get_ee_pose_command(self):
+        return self.arm.get_ee_pose_command()
+
+    def get_ee_pose(self):
+        return self.arm.get_ee_pose(self)
+    
+    def capture_joint_positions(self):
+        return self.arm.capture_joint_positions()
+
+    def get_cartesian_pose(self):
+        return self.arm.get_cartesian_pose()
+
+    def convert_joint_positions_to_cartesian(self, joint_states):
+        return self.arm.convert_joint_positions_to_cartesian(joint_states)
+    
+    def get_cartesian_pose_gripper_tip(self):
+        return self.arm.get_cartesian_pose_gripper_tip()
+    
+    def set_ee_pose_components(self, x=0, y=0, z=0, roll=0, pitch=0, yaw=None, custom_guess=None, execute=True, moving_time=None, accel_time=None, blocking=True):
+        return self.arm.set_ee_pose_components(x=0, y=0, z=0, roll=0, pitch=0, yaw=None, custom_guess=None, execute=True, moving_time=None, accel_time=None, blocking=True)
+    
+
+    def gripper_state(self, event):
+        self.gripper.gripper_state(event)
+
+    def gripper_controller(self, effort, delay):
+        self.gripper.gripper_controller(effort, delay)
+
+    def set_pressure(self, pressure):
+        self.gripper.set_pressure(pressure)
+
+    def open(self,delay=1.0):
+        self.gripper.open(delay)
+
+    def close(self,delay=1.0):
+        self.gripper.close(delay)
+
 ### @brief Definition of the Interbotix Arm Module
 ### @param core - reference to the InterbotixRobotXSCore class containing the internal ROS plumbing that drives the Python API
 ### @param robot_model - Interbotix Arm model (ex. 'wx200' or 'vx300s')
